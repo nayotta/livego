@@ -1,0 +1,33 @@
+name: build
+on:
+  release:
+    types: [created]
+
+jobs:
+  compile-and-upload-asset:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: ["linux"]
+        goarch: ["amd64"]
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-go@v1
+      with:
+        go-version: "1.14"
+    - name: Compile Metathingsd Binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
+      run: |
+        go build -o livego main.go
+        tar zcvf livego.tar.gz livego
+    - name: Upload Livego Asset
+      uses: PeerXu/upload-asset@v1
+      with:
+        file: livego.tar.gz
+        os: ${{ matrix.goos }}
+        arch: ${{ matrix.goarch }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
